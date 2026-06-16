@@ -57,6 +57,21 @@ export default function Home() {
 
       {!selected && (
         <div style={{ maxWidth: 1000, margin: "0 auto", padding: "24px 22px 80px" }}>
+          {/* About + how it works */}
+          <div style={{ background: "#1c0024", border: "2px solid #ff00aa", borderRadius: 12, padding: "20px 22px", margin: "10px 0 22px", boxShadow: "0 0 18px rgba(255,0,170,0.25)" }}>
+            <div style={{ fontStyle: "italic", color: "#ffe600", fontWeight: 900, fontSize: 18 }}>⚔ What is SkillDuel?</div>
+            <p style={{ color: "#e0c0f0", margin: "8px 0 16px", fontSize: 14, lineHeight: 1.6 }}>
+              SkillDuel is a 1v1 challenge arena. Pick a category — coding, writing, math, design — stake GEN, and a rival accepts with a matching stake. Both solve the same prompt, then GenLayer's AI validators score the answers and the winner takes the whole pot.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
+              {[["1", "Connect your wallet"], ["2", "Create a duel or accept one (stake GEN)"], ["3", "Both fighters submit their answers"], ["4", "AI judges — winner takes the pot"]].map(([n, t]) => (
+                <div key={n} style={{ background: "#2a0033", borderRadius: 8, padding: "10px 12px" }}>
+                  <span style={{ color: "#ffe600", fontWeight: 900, fontStyle: "italic" }}>STEP {n}</span>
+                  <div style={{ color: "#e0c0f0", fontSize: 13, marginTop: 4 }}>{t}</div>
+                </div>
+              ))}
+            </div>
+          </div>
           <div style={{ textAlign: "center", margin: "10px 0 24px" }}>
             <button onClick={() => setShowCreate(true)} style={{ background: "linear-gradient(90deg,#ff00aa,#ffe600)", color: "#120016", border: "3px solid #fff", borderRadius: 6, padding: "12px 28px", cursor: "pointer", fontWeight: 900, fontStyle: "italic", fontSize: 16, letterSpacing: 1 }}>+ NEW CHALLENGER</button>
           </div>
