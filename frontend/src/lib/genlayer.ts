@@ -55,6 +55,10 @@ export function readClient(): GenLayerClient<any> {
   return createClient({ chain: studionet }) as GenLayerClient<any>;
 }
 
+export function disconnectWallet(): WalletState {
+  return { address: null, client: null };
+}
+
 export function shortAddr(addr: string): string {
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
