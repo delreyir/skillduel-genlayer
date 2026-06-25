@@ -35,9 +35,26 @@ export default function Home() {
     setLoading(true); setTx(`${fn}…`);
     try {
       const hash = await wallet.client.writeContract({ address: CONTRACT_ADDRESS, functionName: fn, args, value: value ?? BigInt(0) });
-      await wallet.client.waitForTransactionReceipt({ hash, status: TransactionStatus.ACCEPTED });
+      setTx("⏳ Waiting for consensus…");
+      const receipt = await wallet.client.waitForTransactionReceipt({ hash, status: TransactionStatus.ACCEPTED });
+      if (receipt && (receipt as any).status === TransactionStatus.CANCELED) {
+        setTx("⚠ DRAW — AI judges disagreed. No winner declared. Try again.");
+        setLoading(false);
+        return;
+      }
       setTx(""); await load(); setSelected(null); setShowCreate(false);
-    } catch (e: any) { setTx(e.message); }
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      if (/consensus|abort|canceled|timeout/i.test(msg)) {
+        setTx("⚠ DRAW — AI panel could not reach consensus. Validators disagreed on the scores. Retry the judgment.");
+      } else if (/insufficient funds/i.test(msg)) {
+        setTx("⚠ NOT ENOUGH GEN — get tokens from the faucet");
+      } else if (/user rejected|rejected/i.test(msg)) {
+        setTx("FORFEIT — transaction rejected");
+      } else {
+        setTx(`ERROR: ${msg.slice(0, 100)}`);
+      }
+    }
     setLoading(false);
   }
 

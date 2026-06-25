@@ -86,17 +86,18 @@ class SkillDuel(gl.Contract):
         if duel["status"] != 2:
             raise gl.vm.UserError("Both must submit first")
 
-        def leader_fn():
-            prompt = f"""You are judging a 1v1 skill duel.
+        def _score_submissions(category: str, prompt: str, sub1: str, sub2: str) -> dict:
+            """Run LLM scoring and return a normalized result dict."""
+            scoring_prompt = f"""You are judging a 1v1 skill duel.
 
-CATEGORY: {duel['category']}
-CHALLENGE PROMPT: {duel['prompt']}
+CATEGORY: {category}
+CHALLENGE PROMPT: {prompt}
 
 SUBMISSION 1 (Player A):
-{duel['submission1']}
+{sub1}
 
 SUBMISSION 2 (Player B):
-{duel['submission2']}
+{sub2}
 
 Judge based on:
 1. Correctness — does it solve the challenge?
@@ -104,24 +105,51 @@ Judge based on:
 3. Creativity — novel approach or solution
 4. Completeness — edge cases, thoroughness
 
-Return JSON:
-{{
-    "winner": 1 or 2,
-    "score1": 1-10,
-    "score2": 1-10,
-    "reasoning": "brief explanation of why the winner's submission is superior"
-}}"""
-            response = gl.nondet.exec_prompt(prompt)
-            return json.loads(response)
+You MUST respond with ONLY a valid JSON object, no extra text.
+Use exactly these keys and value types:
+- "winner": integer, either 1 or 2
+- "score1": integer from 1 to 10
+- "score2": integer from 1 to 10
+- "reasoning": a single short sentence explaining why the winner is better
+
+Example:
+{{"winner": 1, "score1": 8, "score2": 6, "reasoning": "Player A's solution is more elegant and handles edge cases."}}"""
+            response = gl.nondet.exec_prompt(scoring_prompt)
+            # Sanitize: strip markdown fences and whitespace
+            cleaned = response.strip()
+            if cleaned.startswith("```"):
+                lines = cleaned.split("\n")
+                lines = [l for l in lines if not l.strip().startswith("```")]
+                cleaned = "\n".join(lines).strip()
+            parsed = json.loads(cleaned)
+            # Normalize fields for consistent comparison
+            normalized = {
+                "winner": max(1, min(2, int(parsed.get("winner", 1)))),
+                "score1": max(1, min(10, int(parsed.get("score1", 5)))),
+                "score2": max(1, min(10, int(parsed.get("score2", 5)))),
+                "reasoning": str(parsed.get("reasoning", "")).strip(),
+            }
+            return normalized
+
+        def leader_fn():
+            return _score_submissions(duel["category"], duel["prompt"], duel["submission1"], duel["submission2"])
 
         def validator_fn(leader_result) -> bool:
             if not isinstance(leader_result, gl.vm.Return):
                 return False
-            validator_data = leader_fn()
             leader_data = leader_result.calldata
+            # Validate leader result structure
+            if not isinstance(leader_data, dict):
+                return False
+            required_keys = {"winner", "score1", "score2", "reasoning"}
+            if not required_keys.issubset(leader_data.keys()):
+                return False
+            # Run independent scoring
+            validator_data = _score_submissions(duel["category"], duel["prompt"], duel["submission1"], duel["submission2"])
+            # Compare: winner must match, scores within ±2
             return (leader_data["winner"] == validator_data["winner"]
-                    and abs(leader_data["score1"] - validator_data["score1"]) <= 2
-                    and abs(leader_data["score2"] - validator_data["score2"]) <= 2)
+                    and abs(int(leader_data["score1"]) - int(validator_data["score1"])) <= 2
+                    and abs(int(leader_data["score2"]) - int(validator_data["score2"])) <= 2)
 
         result = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
 
