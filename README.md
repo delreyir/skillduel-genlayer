@@ -3,7 +3,7 @@
 **Same challenge. Two players. AI picks the winner. Loser pays.**
 
 🔗 **Live app:** https://skillduel-genlayer.vercel.app
-📜 **Contract (GenLayer Studionet):** `0xB95f58bcb95A7807FB462923c8aD23804C0C1608`
+📜 **Contract (GenLayer Studionet):** `0x7b3eE8Ab308fbd6e16F59ED5348C3fB01D84D59D`
 
 ---
 
