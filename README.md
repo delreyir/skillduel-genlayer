@@ -2,7 +2,7 @@
 
 **Same challenge. Two players. AI picks the winner. Loser pays.**
 
-🔗 **Live app:** https://skillduel.pages.dev
+🔗 **Live app:** https://skillduel-genlayer.vercel.app
 📜 **Contract (GenLayer Studionet):** `0xB95f58bcb95A7807FB462923c8aD23804C0C1608`
 
 ---
@@ -99,10 +99,10 @@ skillduel-genlayer/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── layout.tsx
-│   │   │   └── page.tsx     # Fighting-game VS roster UI
+│   │   │   └── page.tsx     # Modern dark UI — arena, matchup view, modals
 │   │   └── lib/
 │   │       └── genlayer.ts  # Wallet connect (no Snap) + read client
-│   ├── next.config.js       # Static export config
+│   ├── next.config.js       # Next.js config
 │   └── package.json
 └── README.md
 ```
@@ -124,8 +124,8 @@ genlayer deploy --contract contracts/skill_duel.py
 # 3. Frontend
 cd frontend
 npm install
-npm run dev          # local dev
-npm run build        # static export → ./out (deploy to any static host)
+npm run dev          # local dev server
+npm run build        # production build
 ```
 
 ---
@@ -136,9 +136,10 @@ npm run build        # static export → ./out (deploy to any static host)
 |-------|-----------|
 | Smart contract | Python — GenLayer Intelligent Contract |
 | AI consensus | `gl.vm.run_nondet_unsafe` + shared `_score_submissions()` helper with normalized output comparison |
-| Frontend | Next.js (static export) + TypeScript |
+| Frontend | Next.js 14 + TypeScript |
 | SDK | genlayer-js |
-| Hosting | Cloudflare Pages |
+| Wallet | Any EVM wallet (MetaMask, Rabby) — no Snap, standard `wallet_switchEthereumChain` |
+| Hosting | Vercel |
 
 ---
 
