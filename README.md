@@ -42,6 +42,31 @@ Judging code quality or creative writing is inherently subjective — a normal s
 
 ---
 
+## AI Consensus — Technical Details
+
+The `judge_duel` function uses `gl.vm.run_nondet_unsafe()` with a shared `_score_submissions()` helper that both leader and validators call:
+
+1. **Strict JSON-only prompt** — the LLM is instructed to return ONLY valid JSON with exact keys and types, including an example output
+2. **Sanitization** — markdown code fences (` ``` `) are stripped from responses before parsing
+3. **Normalization** — all fields are cast to consistent types: `int()` with clamping (`max(1, min(10, ...))` for scores, `max(1, min(2, ...))` for winner)
+4. **Validation** — leader result is checked for required keys before comparison
+5. **Comparison** — winner must match exactly, scores within ±2 tolerance
+
+This prevents validators from disagreeing due to formatting differences in LLM output.
+
+---
+
+## Consensus Failure Handling
+
+If validators cannot agree (consensus failure), the transaction is **canceled** — not stuck in limbo. The frontend detects this:
+
+- Checks `TransactionStatus.CANCELED` on the receipt
+- Pattern-matches error messages for consensus/abort/timeout keywords
+- Displays descriptive messages: "DRAW — AI judges disagreed. No winner declared."
+- Users can retry the judgment without being stuck
+
+---
+
 ## Wallet & Network
 
 The app connects a standard EVM wallet and signs transactions through the normal wallet popup — **no GenLayer Snap install**. On connect, it adds/switches your wallet to the **GenLayer Studio Network** (chain `61999`, RPC `https://studio.genlayer.com/api`).
@@ -110,7 +135,7 @@ npm run build        # static export → ./out (deploy to any static host)
 | Layer | Technology |
 |-------|-----------|
 | Smart contract | Python — GenLayer Intelligent Contract |
-| AI consensus | `gl.vm.run_nondet_unsafe` + partial field matching |
+| AI consensus | `gl.vm.run_nondet_unsafe` + shared `_score_submissions()` helper with normalized output comparison |
 | Frontend | Next.js (static export) + TypeScript |
 | SDK | genlayer-js |
 | Hosting | Cloudflare Pages |
